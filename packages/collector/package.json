@@ -1,0 +1,20 @@
+{
+  "name": "team-ai-collector",
+  "version": "0.1.0",
+  "description": "Team AI usage collector CLI",
+  "bin": {
+    "team-ai-collector": "./bin/cli.js"
+  },
+  "main": "lib/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@team-ai/adapters": "0.1.0",
+    "@team-ai/shared": "0.1.0",
+    "better-sqlite3": "^12.6.2",
+    "chalk": "^4.1.2",
+    "commander": "^13.1.0"
+  }
+}

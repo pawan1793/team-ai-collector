@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-teamai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-teamai}
+      POSTGRES_DB: ${POSTGRES_DB:-teamai}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-teamai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-teamai}:${POSTGRES_PASSWORD:-teamai}@postgres:5432/${POSTGRES_DB:-teamai}
+      PORT: "8080"
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-change-me-admin-key}
+      DEVICE_TOKEN_SECRET: ${DEVICE_TOKEN_SECRET:-change-me-device-secret}
+      DEFAULT_MESSAGE_CONTENT: ${DEFAULT_MESSAGE_CONTENT:-none}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: packages/dashboard/Dockerfile
+      args:
+        VITE_API_BASE: ""
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

@@ -1,0 +1,2 @@
+{"type":"user","message":{"content":"Hello from fixture"},"timestamp":"2026-01-01T12:00:00.000Z","cwd":"/tmp/fixture-project"}
+{"type":"assistant","message":{"content":"Hi there"},"timestamp":"2026-01-01T12:00:01.000Z","model":"claude-sonnet-4-20250514"}

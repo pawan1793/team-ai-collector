@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: Team AI Collector API
+  version: 1.0.0
+paths:
+  /v1/health:
+    get:
+      summary: Liveness
+  /v1/auth/device:
+    post:
+      summary: Exchange org API key for device token
+  /v1/sync:
+    post:
+      summary: Ingest sync payload
+  /v1/team/overview:
+    get:
+      summary: Team KPIs for date range
+  /v1/team/members:
+    get:
+      summary: Per-member rollups
+  /v1/team/sessions:
+    get:
+      summary: Paginated session list
