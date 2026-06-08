@@ -46,7 +46,7 @@ program
       console.log(chalk.dim(`  org: ${auth.org_id}  user: ${auth.user_id}`));
       console.log(
         chalk.dim(
-          '  Privacy: message_content=none by default. Run connect to start syncing.'
+          '  Privacy: message_content=full by default. Run connect to start syncing.'
         )
       );
     } catch (err) {

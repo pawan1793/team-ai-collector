@@ -265,6 +265,9 @@ function getChats() {
           composerId: chatId,
           name: meta.name || null,
           createdAt: meta.createdAt || null,
+          // agent-store meta rarely carries an updated time; fall back to
+          // createdAt so the session always has a usable timestamp.
+          lastUpdatedAt: meta.lastUpdatedAt || meta.createdAt || null,
           mode: meta.mode || null,
           folder: null,
           _dbPath: dbPath,
@@ -299,7 +302,7 @@ function getChats() {
         composerId: h.composerId,
         name: h.name || null,
         createdAt: h.createdAt || null,
-        lastUpdatedAt: h.lastUpdatedAt || null,
+        lastUpdatedAt: h.lastUpdatedAt || h.createdAt || null,
         mode: h.mode,
         folder,
         bubbleCount,

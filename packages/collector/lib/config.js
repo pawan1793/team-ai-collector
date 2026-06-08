@@ -7,7 +7,7 @@ const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
 const DEFAULTS = {
   sync_interval_sec: 3600,
-  privacy: { message_content: 'none' },
+  privacy: { message_content: 'full' },
   projects: null,
 };
 

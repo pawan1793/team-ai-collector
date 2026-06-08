@@ -19,11 +19,11 @@ router.get('/overview', requireOrgApiKey(), async (req, res) => {
 
     const stats = await pool.query(
       `SELECT
-         COUNT(DISTINCT s.user_id) FILTER (WHERE s.last_updated_at >= $2 AND s.last_updated_at <= $3) AS active_members,
-         COUNT(DISTINCT s.session_id) AS total_sessions,
-         COALESCE(SUM(st.total_messages), 0) AS total_messages,
-         COALESCE(SUM(st.total_input_tokens), 0) AS total_input_tokens,
-         COALESCE(SUM(st.total_output_tokens), 0) AS total_output_tokens
+         COUNT(DISTINCT s.user_id) FILTER (WHERE COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3) AS active_members,
+         COUNT(DISTINCT s.session_id) FILTER (WHERE COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3) AS total_sessions,
+         COALESCE(SUM(st.total_messages) FILTER (WHERE COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3), 0) AS total_messages,
+         COALESCE(SUM(st.total_input_tokens) FILTER (WHERE COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3), 0) AS total_input_tokens,
+         COALESCE(SUM(st.total_output_tokens) FILTER (WHERE COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3), 0) AS total_output_tokens
        FROM sessions s
        LEFT JOIN session_stats st ON st.org_id = s.org_id AND st.user_id = s.user_id
          AND st.source = s.source AND st.session_id = s.session_id
@@ -33,7 +33,7 @@ router.get('/overview', requireOrgApiKey(), async (req, res) => {
 
     const bySource = await pool.query(
       `SELECT source, COUNT(*) AS sessions
-       FROM sessions WHERE org_id = $1 AND last_updated_at >= $2 AND last_updated_at <= $3
+       FROM sessions WHERE org_id = $1 AND COALESCE(last_updated_at, created_at) >= $2 AND COALESCE(last_updated_at, created_at) <= $3
        GROUP BY source ORDER BY sessions DESC`,
       [orgId, from, to]
     );
@@ -61,10 +61,10 @@ router.get('/members', requireOrgApiKey(), async (req, res) => {
          COALESCE(SUM(st.total_messages), 0) AS messages,
          COALESCE(SUM(st.total_input_tokens), 0) AS input_tokens,
          COALESCE(SUM(st.total_output_tokens), 0) AS output_tokens,
-         MAX(s.last_updated_at) AS last_active_at
+         MAX(COALESCE(s.last_updated_at, s.created_at)) AS last_active_at
        FROM users u
        LEFT JOIN sessions s ON s.org_id = u.org_id AND s.user_id = u.user_id
-         AND s.last_updated_at >= $2 AND s.last_updated_at <= $3
+         AND COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3
        LEFT JOIN session_stats st ON st.org_id = s.org_id AND st.user_id = s.user_id
          AND st.source = s.source AND st.session_id = s.session_id
        WHERE u.org_id = $1
@@ -90,13 +90,13 @@ router.get('/sessions', requireOrgApiKey(), async (req, res) => {
       FROM sessions s
       LEFT JOIN session_stats st ON st.org_id = s.org_id AND st.user_id = s.user_id
         AND st.source = s.source AND st.session_id = s.session_id
-      WHERE s.org_id = $1 AND s.last_updated_at >= $2 AND s.last_updated_at <= $3`;
+      WHERE s.org_id = $1 AND COALESCE(s.last_updated_at, s.created_at) >= $2 AND COALESCE(s.last_updated_at, s.created_at) <= $3`;
     const params = [orgId, from, to];
     if (userId) {
       params.push(userId);
       sql += ` AND s.user_id = $${params.length}`;
     }
-    sql += ` ORDER BY s.last_updated_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    sql += ` ORDER BY COALESCE(s.last_updated_at, s.created_at) DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
     const rows = await getPool().query(sql, params);
