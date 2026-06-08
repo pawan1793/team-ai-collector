@@ -8,14 +8,57 @@ const {
   getGitEmail,
   DEFAULTS,
 } = require('../lib/config');
-const { initDb, getDb, getMeta } = require('../lib/db');
-const { scanAll } = require('../lib/scanner');
+const { initDb, getDb, getMeta, setMeta } = require('../lib/db');
+const { scanAll, normalizeFolder } = require('../lib/scanner');
 const { runSyncCycle, deviceLogin } = require('../lib/sync');
 const { installService } = require('../lib/service');
-const { detectEditors } = require('@team-ai/adapters');
+const { detectEditors, getAllChats } = require('@team-ai/adapters');
 
 const program = new Command();
 program.name('team-ai-collector').description('Team AI usage collector').version('0.1.0');
+
+function prompt(question) {
+  const readline = require('readline');
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => rl.question(question, (ans) => { rl.close(); resolve(ans); }));
+}
+
+// Show detected project folders and let the user pick which to sync.
+// Returns an array of folder paths, or null to sync all folders.
+async function selectProjects() {
+  const folders = [
+    ...new Set(getAllChats().map((c) => normalizeFolder(c.folder)).filter(Boolean)),
+  ].sort();
+
+  if (folders.length === 0) {
+    console.log(chalk.dim('  No project folders detected; syncing all sessions.'));
+    return null;
+  }
+
+  console.log(chalk.bold('\n  Projects found:'));
+  folders.forEach((f, i) => console.log(`    ${chalk.cyan(i + 1)}. ${f}`));
+  const answer = (
+    await prompt(chalk.dim('  Enter comma-separated numbers (e.g. 1,2,3) or "all": '))
+  ).trim();
+
+  if (!answer || answer.toLowerCase() === 'all') return null;
+
+  const selected = [
+    ...new Set(
+      answer
+        .split(',')
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => Number.isInteger(n) && n >= 1 && n <= folders.length)
+        .map((n) => folders[n - 1])
+    ),
+  ];
+
+  if (selected.length === 0) {
+    console.log(chalk.yellow('  No valid selection; syncing all sessions.'));
+    return null;
+  }
+  return selected;
+}
 
 program
   .command('login')
@@ -32,6 +75,7 @@ program
     }
     try {
       const auth = await deviceLogin(opts.org, opts.key, email, opts.deviceName);
+      const projects = await selectProjects();
       saveConfig({
         api_base: opts.org.replace(/\/$/, ''),
         org_id: auth.org_id,
@@ -41,9 +85,19 @@ program
         device_token: auth.device_token,
         org_api_key: opts.key,
         ...DEFAULTS,
+        projects,
       });
+      // Reset the sync cursor so the chosen project selection takes full effect:
+      // older sessions in newly-selected folders re-sync on the next connect.
+      initDb();
+      setMeta('cursor_since', '0');
       console.log(chalk.green('✓ Logged in'));
       console.log(chalk.dim(`  org: ${auth.org_id}  user: ${auth.user_id}`));
+      console.log(
+        chalk.dim(
+          `  Projects: ${projects ? `${projects.length} selected` : 'all'}`
+        )
+      );
       console.log(
         chalk.dim(
           '  Privacy: message_content=full by default. Run connect to start syncing.'

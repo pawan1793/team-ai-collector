@@ -5,6 +5,12 @@ import SessionPanel from './components/SessionPanel';
 
 const DAY = 24 * 60 * 60 * 1000;
 const PAGE_SIZE = 50;
+
+function projectName(path) {
+  if (!path) return '—';
+  const parts = String(path).split(/[\\/]+/).filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : '—';
+}
 const RANGE_OPTIONS = [
   { label: 'Last 7 days', days: 7 },
   { label: 'Last 30 days', days: 30 },
@@ -336,6 +342,7 @@ export default function App() {
               <thead>
                 <tr style={{ textAlign: 'left', color: '#8b9cb3' }}>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Session</th>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Project</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Source</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Messages</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Tokens in</th>
@@ -356,6 +363,12 @@ export default function App() {
                     >
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836', color: '#3d7eff' }}>
                         {s.name || s.session_id}
+                      </td>
+                      <td
+                        style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}
+                        title={s.project_path || ''}
+                      >
+                        {projectName(s.project_path)}
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>{s.source}</td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>

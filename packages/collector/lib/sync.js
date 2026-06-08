@@ -25,12 +25,21 @@ function buildSyncPayload(config, since) {
   const session_stats = [];
   const messages = [];
 
-  const chatRows = db
+  const allRows = db
     .prepare(
       `SELECT id, source, name, mode, folder, created_at, last_updated_at, bubble_count
        FROM chats WHERE last_updated_at IS NULL OR last_updated_at > ?`
     )
     .all(since);
+
+  // Only sync sessions from the project folders the user selected at login.
+  // config.projects === null means sync all folders.
+  const allowed = Array.isArray(config.projects) && config.projects.length > 0
+    ? new Set(config.projects)
+    : null;
+  const chatRows = allowed
+    ? allRows.filter((c) => c.folder && allowed.has(c.folder))
+    : allRows;
 
   for (const chat of chatRows) {
     sessions.push({
