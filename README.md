@@ -21,7 +21,6 @@ docker compose exec server node scripts/bootstrap-org.js --name "Acme Engineerin
 
 ```bash
 npm install
-npm run build -w team-ai-collector
 
 # Login with org API key from bootstrap step
 node packages/collector/bin/cli.js login \
@@ -47,6 +46,7 @@ Config is stored at `~/.team-ai/config.json` (mode `0600`). Default privacy: **n
 
 ## Docs
 
+- **[Team onboarding](docs/TEAM-ONBOARDING.md)** — get your team sending data in one command (`./join.sh`)
 - **[Running guide](docs/RUNNING.md)** — detailed setup (Docker, local dev, CLI, dashboard, troubleshooting)
 - [PRD](docs/PRD-team-ai-usage-collector.md)
 - [Greenfield reference pack](docs/GREENFIELD-REFERENCE-PACK.md)

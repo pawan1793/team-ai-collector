@@ -12,11 +12,14 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "build": "npm run build -w @team-ai/dashboard && npm run build -w @team-ai/server",
+    "build": "npm run build -w @team-ai/dashboard",
     "test": "npm test --workspaces --if-present",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "bootstrap:org": "node packages/server/scripts/bootstrap-org.js",
+    "join": "./join.sh",
+    "sync": "node packages/collector/bin/cli.js connect --once",
+    "collector:status": "node packages/collector/bin/cli.js status",
     "e2e": "node scripts/e2e-smoke.js",
     "e2e:docker": "bash scripts/e2e-smoke.sh",
     "test:integration": "RUN_INTEGRATION_TESTS=1 node --test packages/server/test/sync.test.js"
