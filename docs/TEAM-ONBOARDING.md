@@ -14,7 +14,7 @@ There are two roles: the **admin** (you, one-time setup) and each **engineer** (
 cp .env.example .env
 # Edit ADMIN_API_KEY and DEVICE_TOKEN_SECRET to your own secrets
 docker compose up -d --build
-```
+```org_6b57487a0862b75786879645
 
 Verify it's up: `curl http://localhost:8080/v1/health` → `{"ok":true,...}`
 

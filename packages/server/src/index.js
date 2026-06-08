@@ -1,3 +1,5 @@
+require('./env'); // load .env before anything reads process.env
+
 const express = require('express');
 const path = require('path');
 const { initDb } = require('./db');

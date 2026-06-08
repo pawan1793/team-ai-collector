@@ -1,3 +1,4 @@
+require('../src/env'); // load .env before anything reads process.env
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { randomUUID } = require('crypto');

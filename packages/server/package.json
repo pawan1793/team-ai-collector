@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@team-ai/shared": "0.1.0",
+    "dotenv": "^17.4.2",
     "express": "^4.22.1",
     "pg": "^8.13.3"
   }

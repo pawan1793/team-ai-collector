@@ -2,6 +2,7 @@
 /**
  * Bootstrap first organization. Run inside server container or with DATABASE_URL set.
  */
+require('../src/env'); // load .env before anything reads process.env
 const { randomUUID } = require('crypto');
 const { initDb, getPool } = require('../src/db');
 const { hashApiKey, generateToken } = require('../src/auth');
