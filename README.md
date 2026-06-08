@@ -46,6 +46,7 @@ Config is stored at `~/.team-ai/config.json` (mode `0600`). Default privacy: **n
 
 ## Docs
 
+- **[Local setup (no Docker)](docs/LOCAL-SETUP.md)** — run server, dashboard, login & sync on your Mac
 - **[Team onboarding](docs/TEAM-ONBOARDING.md)** — get your team sending data in one command (`./join.sh`)
 - **[Running guide](docs/RUNNING.md)** — detailed setup (Docker, local dev, CLI, dashboard, troubleshooting)
 - [PRD](docs/PRD-team-ai-usage-collector.md)
