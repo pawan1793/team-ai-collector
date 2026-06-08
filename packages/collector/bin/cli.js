@@ -11,6 +11,7 @@ const {
 const { initDb, getDb, getMeta } = require('../lib/db');
 const { scanAll } = require('../lib/scanner');
 const { runSyncCycle, deviceLogin } = require('../lib/sync');
+const { installService } = require('../lib/service');
 const { detectEditors } = require('@team-ai/adapters');
 
 const program = new Command();
@@ -129,5 +130,23 @@ program.command('status').action(() => {
   if (err) console.log(chalk.yellow(`  Error:   ${err}`));
   console.log(`  Editors: ${detectEditors().join(', ') || 'none'}`);
 });
+
+program
+  .command('service')
+  .description('Manage background auto-sync (macOS launchd / Linux systemd / Windows Task Scheduler)')
+  .argument('<action>', 'install | uninstall | status')
+  .action((action) => {
+    try {
+      const result = installService(action);
+      if (action === 'status') {
+        console.log(`  Background sync: ${result}`);
+      } else {
+        console.log(chalk.green(`✓ ${result}`));
+      }
+    } catch (err) {
+      console.error(chalk.red(err.message));
+      process.exit(1);
+    }
+  });
 
 program.parse();

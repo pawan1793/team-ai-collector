@@ -19,6 +19,7 @@
     "bootstrap:org": "node packages/server/scripts/bootstrap-org.js",
     "join": "./join.sh",
     "sync": "node packages/collector/bin/cli.js connect --once",
+    "service": "node packages/collector/bin/cli.js service",
     "collector:status": "node packages/collector/bin/cli.js status",
     "e2e": "node scripts/e2e-smoke.js",
     "e2e:docker": "bash scripts/e2e-smoke.sh",

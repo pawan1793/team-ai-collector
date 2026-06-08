@@ -46,37 +46,66 @@ token is a Bearer credential.
 
 ---
 
-## 2. Engineer — one command
+## 2. Engineer setup
+
+Works on **macOS, Linux, and Windows**. The collector runs on Node, so the commands are
+the same everywhere — only the wrapper differs.
+
+> **Before you start:** make sure `git config user.email` is set — that email is your
+> identity in the team dashboard. Requires Node ≥ 20.19.
+
+### macOS / Linux (and Windows with Git Bash) — one command
 
 ```bash
 git clone <your-repo-url> && cd team-ai-collector
 ./join.sh org_xxxxxxxx
 ```
 
-That's the whole setup. `join.sh` will:
+### Windows (PowerShell / cmd) — three commands
 
-1. Install dependencies (first run only).
-2. Log you in and save a device token to `~/.team-ai/config.json` (mode `0600`).
-3. Scan your local sessions and upload the first batch.
+```powershell
+git clone <your-repo-url>
+cd team-ai-collector
+npm install
+node packages/collector/bin/cli.js login --org http://your-server:8080 --key org_xxxxxxxx
+node packages/collector/bin/cli.js connect --once
+```
 
-> **Before you run it:** make sure `git config user.email` is set — that email is your
-> identity in the team dashboard.
+Either way the result is the same:
+
+1. Dependencies installed (first run only).
+2. Logged in — a device token is saved to `~/.team-ai/config.json` (mode `0600`).
+3. Local sessions scanned and the first batch uploaded.
 
 ### Send new sessions later
 
-Just re-run it any time:
+Re-run `./join.sh org_xxxxxxxx` (or `node packages/collector/bin/cli.js connect --once`)
+any time, **or** set up background auto-sync below.
+
+### Auto-sync in the background (recommended)
+
+One cross-platform command registers the collector with your OS's native scheduler —
+no cron, no terminal left open. Run it once after logging in:
 
 ```bash
-./join.sh org_xxxxxxxx
+node packages/collector/bin/cli.js service install
+# or: npm run service -- install
 ```
 
-### Auto-sync every hour (recommended)
+| OS | Mechanism | Behavior |
+|----|-----------|----------|
+| macOS | launchd LaunchAgent | runs the built-in hourly loop, kept alive, restarts on login/reboot |
+| Linux | systemd `--user` service | same loop, `Restart=always`, starts on login |
+| Windows | Task Scheduler task | runs one sync per hour |
 
-After the first run, `join.sh` prints a ready-to-paste cron line. Or set it up directly:
+Manage it:
 
 ```bash
-(crontab -l 2>/dev/null; echo "0 * * * * cd $(pwd) && node packages/collector/bin/cli.js connect --once") | crontab -
+node packages/collector/bin/cli.js service status
+node packages/collector/bin/cli.js service uninstall
 ```
+
+macOS/Linux log to `~/.team-ai/agent.log`. Log in once (above) before installing.
 
 ### Check it worked
 
@@ -104,21 +133,18 @@ rejects message bodies.
 
 ## Command reference
 
+All `node packages/collector/bin/cli.js <cmd>` calls work on macOS, Linux, and Windows.
+
 | Command | What it does |
 |---------|--------------|
-| `./join.sh <key>` | Install + login + first sync (the one-command path) |
-| `npm run join -- <key>` | Same as above, via npm |
-| `npm run sync` | Upload latest sessions (`connect --once`) |
-| `npm run collector:status` | Show sync status |
-| `node packages/collector/bin/cli.js scan` | Scan locally **without** uploading |
-| `node packages/collector/bin/cli.js logout` | Remove the saved device token |
-
-Long-form equivalents (no `join.sh`):
-
-```bash
-node packages/collector/bin/cli.js login --org http://your-server:8080 --key org_xxxxxxxx
-node packages/collector/bin/cli.js connect --once
-```
+| `./join.sh <key>` | Install + login + first sync (macOS/Linux/Git Bash) |
+| `... cli.js login --org URL --key <key>` | Log in (the Windows-native first step) |
+| `... cli.js connect --once` / `npm run sync` | Upload latest sessions |
+| `... cli.js service install` | Background auto-sync, native to your OS |
+| `... cli.js service status` / `uninstall` | Check or remove background sync |
+| `... cli.js status` / `npm run collector:status` | Show last sync, queue depth, editors |
+| `... cli.js scan` | Scan locally **without** uploading |
+| `... cli.js logout` | Remove the saved device token |
 
 ---
 

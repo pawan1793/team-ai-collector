@@ -48,5 +48,6 @@ echo "→ Uploading session data…"
 $CLI connect --once
 
 echo ""
-echo "✓ Done. Re-run './join.sh $KEY' any time, or schedule hourly:"
-echo "  (crontab -l 2>/dev/null; echo \"0 * * * * cd $(pwd) && $CLI connect --once\") | crontab -"
+echo "✓ Done. To sync automatically in the background (hourly, survives reboot):"
+echo "  $CLI service install"
+echo "Or just re-run './join.sh $KEY' whenever you want to push the latest sessions."
