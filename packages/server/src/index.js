@@ -13,7 +13,7 @@ const PORT = parseInt(process.env.PORT || '8080', 10);
 async function main() {
   await initDb();
   const app = express();
-  app.use(express.json({ limit: '10mb' }));
+  app.use(express.json({ limit: process.env.MAX_PAYLOAD_SIZE || '100mb' }));
 
   app.get('/v1/health', (req, res) => {
     res.json({ ok: true, time: Date.now() });
