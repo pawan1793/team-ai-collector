@@ -1,9 +1,54 @@
+import { estimateSessionCost, formatUsd } from '../pricing';
+
 const ROLE_COLORS = {
   user: '#3d7eff',
   assistant: '#36c98f',
   system: '#8b9cb3',
   tool: '#d4a13d',
 };
+
+function SpendBanner({ session }) {
+  const cost = estimateSessionCost(session);
+
+  return (
+    <div
+      style={{
+        marginBottom: 16,
+        padding: '14px 16px',
+        background: '#16241c',
+        border: '1px solid #2c4536',
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'baseline',
+        justifyContent: 'space-between',
+        gap: 12,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 11, color: '#8b9cb3', marginBottom: 2 }}>
+          Estimated spend{cost?.estimated ? ' (approx.)' : ''}
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#36c98f' }}>
+          {cost ? `${cost.estimated ? '~' : ''}${formatUsd(cost.usd)}` : '—'}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: '#8b9cb3', textAlign: 'right', maxWidth: 220 }}>
+        {cost ? (
+          <>
+            <div>{cost.tier.label} rates</div>
+            {cost.unpriced.length > 0 && (
+              <div style={{ marginTop: 2 }}>
+                Excludes unpriced: {cost.unpriced.join(', ')}
+              </div>
+            )}
+          </>
+        ) : (
+          'No recognized model — pricing unavailable'
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Stat({ label, value }) {
   return (
@@ -72,6 +117,8 @@ export default function SessionPanel({ data, loading, onClose }) {
             <div style={{ fontSize: 12, color: '#8b9cb3', marginBottom: 16, wordBreak: 'break-all' }}>
               {session.project_path || session.session_id}
             </div>
+
+            <SpendBanner session={session} />
 
             <div
               style={{
