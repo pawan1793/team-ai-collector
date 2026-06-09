@@ -50,7 +50,7 @@ This mints the `org_api_key` used by the dashboard and every engineer. Use the *
 ```bash
 cd /Volumes/thalia/team-ai-collector
 DATABASE_URL="postgresql:///teamai" \
-  node packages/server/scripts/bootstrap-org.js --name "Doorloom"
+  node packages/server/scripts/bootstrap-org.js --name "Thalia"
 ```
 
 It prints `org_api_key` (e.g. `org_xxxxxxxxxxxx`) **once** — copy and save it.
@@ -81,7 +81,7 @@ cd /Volumes/thalia/team-ai-collector
 node packages/collector/bin/cli.js login \
   --org http://localhost:8080 \
   --key org_xxxxxxxxxxxx \
-  --email you@doorloom.com
+  --email you@mail.com
 
 # Scan + upload
 node packages/collector/bin/cli.js connect --once
@@ -120,7 +120,7 @@ Terminals 2 and 4 are one-off commands, not long-running.
 | `database "pawanmore" does not exist` | `DATABASE_URL` not set in that shell — `export` it or prefix the command. |
 | `[vite] http proxy error: ECONNREFUSED` (port 8080) | The API server isn't running. Start Terminal 1, confirm `/v1/health`. |
 | `connect` says `⚠ Sync failed (queued)` | Server unreachable; payload is queued. Start the server, re-run `connect --once`. |
-| `No email…` on login | Set `git config user.email` or pass `--email you@doorloom.com`. |
+| `No email…` on login | Set `git config user.email` or pass `--email you@mail.com`. |
 | Dashboard empty | No data yet — run step 4, and make sure you pasted the right `org_api_key`. |
 
 For Docker-based setup and the team rollout, see [RUNNING.md](RUNNING.md) and
