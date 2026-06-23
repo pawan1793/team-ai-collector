@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const syncRoutes = require('./routes/sync');
 const teamRoutes = require('./routes/team');
 const adminRoutes = require('./routes/admin');
+const publicRoutes = require('./routes/public');
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 
@@ -23,6 +24,7 @@ async function main() {
   app.use('/v1/sync', syncRoutes);
   app.use('/v1/team', teamRoutes);
   app.use('/v1/admin', adminRoutes);
+  app.use('/v1/public', publicRoutes);
 
   const publicDir = path.join(__dirname, '../public');
   app.use(express.static(publicDir));
