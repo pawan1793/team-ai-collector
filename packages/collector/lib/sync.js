@@ -6,7 +6,6 @@ const { getDb, getMeta, setMeta } = require('./db');
 const { detectEditors } = require('@team-ai/adapters');
 const { scanAll } = require('./scanner');
 
-const MAX_PAYLOAD_BYTES = 5 * 1024 * 1024;
 const CLIENT_VERSION = '0.1.0';
 
 function parseApiBase(apiBase) {
@@ -132,9 +131,6 @@ function buildSyncPayload(config, since) {
 function uploadSync(config, payload) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(payload);
-    if (Buffer.byteLength(body) > MAX_PAYLOAD_BYTES) {
-      return reject(new Error('Payload exceeds 5MB limit'));
-    }
 
     const { scheme, host, port, pathPrefix } = parseApiBase(config.api_base);
     const path = `${pathPrefix}/v1/sync`;

@@ -105,3 +105,7 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   request_count INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (device_id, window_start)
 );
+
+-- Public API: list users by org, and a user's messages by role.
+CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_id);
+CREATE INDEX IF NOT EXISTS idx_messages_org_user_role ON messages(org_id, user_id, role);
