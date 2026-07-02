@@ -2,6 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { fetchOverview, fetchMembers, fetchSessions, fetchSessionDetail } from './api';
 import KpiCard from './components/KpiCard';
 import SessionPanel from './components/SessionPanel';
+import ModelPie from './components/ModelPie';
+import ModelBars from './components/ModelBars';
+import { fmtUSD } from './format';
 
 const DAY = 24 * 60 * 60 * 1000;
 const PAGE_SIZE = 50;
@@ -12,14 +15,18 @@ function projectName(path) {
   return parts.length ? parts[parts.length - 1] : '—';
 }
 const RANGE_OPTIONS = [
+  { label: 'Last 1 day', days: 1 },
   { label: 'Last 7 days', days: 7 },
   { label: 'Last 30 days', days: 30 },
   { label: 'Last 90 days', days: 90 },
 ];
+// Feature 3: internal account names, mirrors the collector's allow-list.
+const ACCOUNTS = ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5'];
 
 export default function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('org_api_key') || '');
   const [rangeDays, setRangeDays] = useState(7);
+  const [account, setAccount] = useState('');
   const [overview, setOverview] = useState(null);
   const [members, setMembers] = useState([]);
   const [error, setError] = useState('');
@@ -36,7 +43,7 @@ export default function App() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(
-    async (days = rangeDays) => {
+    async (days = rangeDays, acct = account) => {
       if (!apiKey) return;
       setLoading(true);
       setError('');
@@ -44,8 +51,8 @@ export default function App() {
         localStorage.setItem('org_api_key', apiKey);
         const from = Date.now() - days * DAY;
         const [ov, mem] = await Promise.all([
-          fetchOverview(apiKey, from, Date.now()),
-          fetchMembers(apiKey, from, Date.now()),
+          fetchOverview(apiKey, from, Date.now(), acct),
+          fetchMembers(apiKey, from, Date.now(), acct),
         ]);
         setOverview(ov);
         setMembers(mem.members || []);
@@ -60,7 +67,7 @@ export default function App() {
         setLoading(false);
       }
     },
-    [apiKey, rangeDays]
+    [apiKey, rangeDays, account]
   );
 
   useEffect(() => {
@@ -70,9 +77,17 @@ export default function App() {
   const changeRange = useCallback(
     (days) => {
       setRangeDays(days);
-      load(days);
+      load(days, account);
     },
-    [load]
+    [load, account]
+  );
+
+  const changeAccount = useCallback(
+    (acct) => {
+      setAccount(acct);
+      load(rangeDays, acct);
+    },
+    [load, rangeDays]
   );
 
   const openMember = useCallback(
@@ -85,7 +100,7 @@ export default function App() {
       setError('');
       try {
         const from = Date.now() - rangeDays * DAY;
-        const res = await fetchSessions(apiKey, from, Date.now(), member.user_id, PAGE_SIZE, 0);
+        const res = await fetchSessions(apiKey, from, Date.now(), member.user_id, PAGE_SIZE, 0, account);
         const rows = res.sessions || [];
         setSessions(rows);
         setSessionsHasMore(rows.length === PAGE_SIZE);
@@ -96,7 +111,7 @@ export default function App() {
         setSessionsLoading(false);
       }
     },
-    [apiKey, rangeDays]
+    [apiKey, rangeDays, account]
   );
 
   const loadMoreSessions = useCallback(async () => {
@@ -111,7 +126,8 @@ export default function App() {
         Date.now(),
         selectedMember.user_id,
         PAGE_SIZE,
-        sessions.length
+        sessions.length,
+        account
       );
       const rows = res.sessions || [];
       setSessions((prev) => [...prev, ...rows]);
@@ -121,7 +137,7 @@ export default function App() {
     } finally {
       setSessionsLoadingMore(false);
     }
-  }, [apiKey, rangeDays, selectedMember, sessions.length]);
+  }, [apiKey, rangeDays, selectedMember, sessions.length, account]);
 
   const openSession = useCallback(
     async (session) => {
@@ -157,7 +173,9 @@ export default function App() {
     <div style={{ maxWidth: 960, margin: '0 auto', padding: 24 }}>
       <header style={{ marginBottom: 32 }}>
         <h1 style={{ margin: 0, fontSize: 28 }}>Team AI Usage</h1>
-        <p style={{ color: '#8b9cb3', marginTop: 8 }}>Last {rangeDays} days — self-hosted dashboard</p>
+        <p style={{ color: '#8b9cb3', marginTop: 8 }}>
+          Last {rangeDays} {rangeDays === 1 ? 'day' : 'days'} — self-hosted dashboard
+        </p>
       </header>
 
       <section
@@ -212,6 +230,31 @@ export default function App() {
             ))}
           </select>
         </label>
+        <label>
+          <span style={{ display: 'block', fontSize: 12, color: '#8b9cb3', marginBottom: 4 }}>
+            Account
+          </span>
+          <select
+            value={account}
+            onChange={(e) => changeAccount(e.target.value)}
+            disabled={loading || !apiKey}
+            style={{
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: '1px solid #2a3544',
+              background: '#1a2332',
+              color: '#e7ecf3',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="">All accounts</option>
+            {ACCOUNTS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </label>
         <button
           type="button"
           onClick={() => load()}
@@ -257,6 +300,50 @@ export default function App() {
         </div>
       )}
 
+      {overview && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: 16,
+            marginBottom: 32,
+          }}
+        >
+          <KpiCard label="Total AI cost" value={fmtUSD(overview.total_cost)} />
+          <KpiCard label="Today's cost" value={fmtUSD(overview.today_cost)} />
+          <KpiCard label="This week" value={fmtUSD(overview.week_cost)} />
+          <KpiCard label="This month" value={fmtUSD(overview.month_cost)} />
+          <KpiCard label="Selected range" value={fmtUSD(overview.selected_range_cost)} />
+        </div>
+      )}
+
+      {overview && (overview.model_distribution?.length > 0) && (
+        <section style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 12 }}>Model usage</h2>
+          <div
+            style={{
+              display: 'flex',
+              gap: 24,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              background: '#1a2332',
+              border: '1px solid #2a3544',
+              borderRadius: 12,
+              padding: 20,
+            }}
+          >
+            <ModelPie data={overview.model_distribution} />
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <ModelBars data={overview.model_distribution} showCount />
+              <div style={{ marginTop: 12, fontSize: 12, color: '#8b9cb3' }}>
+                {Number(overview.total_usage_count || 0).toLocaleString()} requests ·{' '}
+                {Number(overview.total_token_count || 0).toLocaleString()} tokens
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {members.length > 0 && (
         <section style={{ marginBottom: 32 }}>
           <h2 style={{ fontSize: 18, marginBottom: 12 }}>Members</h2>
@@ -264,9 +351,11 @@ export default function App() {
             <thead>
               <tr style={{ textAlign: 'left', color: '#8b9cb3' }}>
                 <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Email</th>
+                <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Account</th>
                 <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Sessions</th>
                 <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Messages</th>
                 <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Tokens in</th>
+                <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Cost</th>
                 <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Last active</th>
               </tr>
             </thead>
@@ -285,10 +374,16 @@ export default function App() {
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836', color: '#3d7eff' }}>
                       {m.email}
                     </td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
+                      {m.account || '—'}
+                    </td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>{m.sessions}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>{m.messages}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
                       {Number(m.input_tokens || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
+                      {fmtUSD(m.estimated_cost)}
                     </td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
                       {m.last_active_at
@@ -331,10 +426,48 @@ export default function App() {
             </button>
           </div>
 
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: 16,
+              marginBottom: 16,
+            }}
+          >
+            <KpiCard label="Total cost" value={fmtUSD(selectedMember.total_cost)} />
+            <KpiCard label="Cost today" value={fmtUSD(selectedMember.today_cost)} />
+            <KpiCard label="Cost in range" value={fmtUSD(selectedMember.estimated_cost)} />
+            <KpiCard
+              label="Avg daily cost"
+              value={fmtUSD(
+                selectedMember.estimated_cost != null
+                  ? Number(selectedMember.estimated_cost) / rangeDays
+                  : null
+              )}
+            />
+          </div>
+
+          {selectedMember.model_distribution?.length > 0 && (
+            <div
+              style={{
+                background: '#1a2332',
+                border: '1px solid #2a3544',
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 20,
+              }}
+            >
+              <div style={{ fontSize: 13, color: '#8b9cb3', marginBottom: 12 }}>Model usage</div>
+              <ModelBars data={selectedMember.model_distribution} />
+            </div>
+          )}
+
           {sessionsLoading && <p style={{ color: '#8b9cb3' }}>Loading sessions…</p>}
 
           {!sessionsLoading && sessions.length === 0 && (
-            <p style={{ color: '#8b9cb3' }}>No sessions in the last {rangeDays} days.</p>
+            <p style={{ color: '#8b9cb3' }}>
+              No sessions in the last {rangeDays} {rangeDays === 1 ? 'day' : 'days'}.
+            </p>
           )}
 
           {!sessionsLoading && sessions.length > 0 && (
@@ -346,6 +479,7 @@ export default function App() {
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Source</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Messages</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Tokens in</th>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Cost</th>
                   <th style={{ padding: '8px 12px', borderBottom: '1px solid #2a3544' }}>Updated</th>
                 </tr>
               </thead>
@@ -376,6 +510,9 @@ export default function App() {
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
                         {Number(s.total_input_tokens || 0).toLocaleString()}
+                      </td>
+                      <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
+                        {fmtUSD(s.estimated_cost)}
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #1e2836' }}>
                         {s.last_updated_at

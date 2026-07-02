@@ -27,8 +27,9 @@ node packages/collector/bin/cli.js login \
   --org http://localhost:8080 \
   --key org_xxxxxxxx
 
-# Hourly sync (or --once for cron)
-node packages/collector/bin/cli.js connect --once
+# Hourly sync (or --once for cron). --account is required the first time, then remembered.
+# Allowed accounts: vibe2, vibe3, info, vibe4, vibe5
+node packages/collector/bin/cli.js connect --account vibe2 --once
 node packages/collector/bin/cli.js status
 ```
 

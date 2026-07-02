@@ -4,25 +4,28 @@ function headers(apiKey) {
   return { 'X-Org-Api-Key': apiKey };
 }
 
-export async function fetchOverview(apiKey, from, to) {
+export async function fetchOverview(apiKey, from, to, account) {
   const q = new URLSearchParams({ from: String(from), to: String(to) });
+  if (account) q.set('account', account);
   const res = await fetch(`${API_BASE}/v1/team/overview?${q}`, { headers: headers(apiKey) });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-export async function fetchMembers(apiKey, from, to) {
+export async function fetchMembers(apiKey, from, to, account) {
   const q = new URLSearchParams({ from: String(from), to: String(to) });
+  if (account) q.set('account', account);
   const res = await fetch(`${API_BASE}/v1/team/members?${q}`, { headers: headers(apiKey) });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
-export async function fetchSessions(apiKey, from, to, userId, limit, offset) {
+export async function fetchSessions(apiKey, from, to, userId, limit, offset, account) {
   const q = new URLSearchParams({ from: String(from), to: String(to) });
   if (userId) q.set('user_id', userId);
   if (limit != null) q.set('limit', String(limit));
   if (offset != null) q.set('offset', String(offset));
+  if (account) q.set('account', account);
   const res = await fetch(`${API_BASE}/v1/team/sessions?${q}`, { headers: headers(apiKey) });
   if (!res.ok) throw new Error(await res.text());
   return res.json();

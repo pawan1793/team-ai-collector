@@ -2,6 +2,7 @@ const express = require('express');
 const { syncPayloadSchema } = require('@team-ai/shared');
 const { getPool } = require('../db');
 const { requireDeviceAuth } = require('../auth');
+const { estimateCost, dominantModel } = require('../pricing');
 
 const router = express.Router();
 
@@ -96,13 +97,24 @@ router.post('/', requireDeviceAuth(), async (req, res) => {
       for (const st of payload.session_stats) {
         const sess = payload.sessions.find((x) => x.session_id === st.session_id);
         const source = sess?.source || 'unknown';
+        // Feature 1: estimate cost from session token totals costed against the
+        // dominant (most-used) model. Unknown model → null (never an error).
+        const costModel = dominantModel(st.models || []);
+        const { estimated_cost, currency } = estimateCost({
+          model: costModel,
+          input_tokens: st.total_input_tokens,
+          output_tokens: st.total_output_tokens,
+          cache_read_tokens: st.total_cache_read,
+          cache_write_tokens: st.total_cache_write,
+        });
         await client.query(
           `INSERT INTO session_stats (
             org_id, user_id, source, session_id,
             total_messages, user_messages, assistant_messages, tool_messages, system_messages,
             tool_calls, models, total_input_tokens, total_output_tokens,
-            total_cache_read, total_cache_write, total_user_chars, total_assistant_chars, analyzed_at
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+            total_cache_read, total_cache_write, total_user_chars, total_assistant_chars, analyzed_at,
+            estimated_cost, cost_currency, cost_model
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
           ON CONFLICT (org_id, user_id, source, session_id) DO UPDATE SET
             total_messages = EXCLUDED.total_messages,
             user_messages = EXCLUDED.user_messages,
@@ -117,7 +129,10 @@ router.post('/', requireDeviceAuth(), async (req, res) => {
             total_cache_write = EXCLUDED.total_cache_write,
             total_user_chars = EXCLUDED.total_user_chars,
             total_assistant_chars = EXCLUDED.total_assistant_chars,
-            analyzed_at = EXCLUDED.analyzed_at`,
+            analyzed_at = EXCLUDED.analyzed_at,
+            estimated_cost = EXCLUDED.estimated_cost,
+            cost_currency = EXCLUDED.cost_currency,
+            cost_model = EXCLUDED.cost_model`,
           [
             device.org_id,
             device.user_id,
@@ -137,9 +152,20 @@ router.post('/', requireDeviceAuth(), async (req, res) => {
             st.total_user_chars || 0,
             st.total_assistant_chars || 0,
             st.analyzed_at || Date.now(),
+            estimated_cost,
+            currency,
+            costModel,
           ]
         );
         accepted.session_stats++;
+      }
+
+      // Feature 3: persist the internal account onto the user (optional, backward compatible).
+      if (payload.account) {
+        await client.query(
+          'UPDATE users SET account = $1 WHERE user_id = $2 AND org_id = $3',
+          [payload.account, device.user_id, device.org_id]
+        );
       }
 
       if (policies.message_content !== 'none') {

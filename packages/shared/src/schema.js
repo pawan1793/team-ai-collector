@@ -58,6 +58,7 @@ const syncPayloadSchema = z.object({
     email: z.string().email(),
     device_id: z.string(),
   }),
+  account: z.string().nullable().optional(),
   cursor: z.object({
     since: z.number(),
     last_session_watermark: z.number().optional(),

@@ -68,8 +68,11 @@ git clone <your-repo-url>
 cd team-ai-collector
 npm install
 node packages/collector/bin/cli.js login --org http://your-server:8080 --key org_xxxxxxxx
-node packages/collector/bin/cli.js connect --once
+node packages/collector/bin/cli.js connect --account vibe2 --once
 ```
+
+> **Account is required.** Pass `--account <vibe2|vibe3|info|vibe4|vibe5>` the first time you
+> connect. It is saved to `~/.team-ai/config.json` and reused automatically afterwards.
 
 Either way the result is the same:
 

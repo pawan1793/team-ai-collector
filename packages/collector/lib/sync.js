@@ -110,6 +110,7 @@ function buildSyncPayload(config, since) {
       email: config.user_email,
       device_id: config.device_id,
     },
+    account: config.account ?? null,
     cursor: { since },
     summary: {
       sessions_scanned: chatRows.length,

@@ -314,23 +314,38 @@ This populates `~/.team-ai/cache.db` only.
 
 ### 4. Sync to server
 
+Every connect must be tied to an **internal account**. Allowed values: `vibe2`, `vibe3`,
+`info`, `vibe4`, `vibe5`. Pass `--account` the first time; it is saved to
+`~/.team-ai/config.json` and reused on subsequent runs (no need to repeat the flag).
+
+```bash
+node packages/collector/bin/cli.js connect --account vibe2 --once
+```
+
+Existing installs created before this change keep working, but must run `connect --account <name>`
+once to record their account (they appear with a blank account on the dashboard until then).
+
 **Single sync** (good for testing or cron):
 
 ```bash
-node packages/collector/bin/cli.js connect --once
+node packages/collector/bin/cli.js connect --once            # reuses saved account
+node packages/collector/bin/cli.js connect --account vibe3 --once
 ```
 
 **Continuous hourly loop** (MVP default interval 3600 seconds):
 
 ```bash
-node packages/collector/bin/cli.js connect
+node packages/collector/bin/cli.js connect --account vibe2
 ```
 
 **Custom interval** (e.g. 30 minutes):
 
 ```bash
-node packages/collector/bin/cli.js connect --interval 1800
+node packages/collector/bin/cli.js connect --account vibe2 --interval 1800
 ```
+
+The account is included in every sync payload and stored on the user server-side, where it can
+be filtered and displayed on the dashboard.
 
 Each cycle:
 

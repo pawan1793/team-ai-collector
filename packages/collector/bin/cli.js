@@ -7,6 +7,8 @@ const {
   clearConfig,
   getGitEmail,
   DEFAULTS,
+  ALLOWED_ACCOUNTS,
+  isValidAccount,
 } = require('../lib/config');
 const { initDb, getDb, getMeta, setMeta } = require('../lib/db');
 const { scanAll, normalizeFolder } = require('../lib/scanner');
@@ -119,12 +121,36 @@ program
   .description('Start sync loop')
   .option('--once', 'Run a single sync cycle')
   .option('--interval <sec>', 'Override sync interval', (v) => parseInt(v, 10))
+  .option('--account <name>', `Internal account name (allowed: ${ALLOWED_ACCOUNTS.join(', ')})`)
   .action(async (opts) => {
     const config = loadConfig();
     if (!config?.device_token) {
       console.error(chalk.red('Not logged in. Run: team-ai-collector login --org URL --key KEY'));
       process.exit(1);
     }
+
+    // Feature 3: resolve + validate the account (strict-once — required until saved, then remembered).
+    if (opts.account != null) {
+      if (!isValidAccount(opts.account)) {
+        console.error(
+          chalk.red(
+            `Invalid account "${opts.account}". Allowed values: ${ALLOWED_ACCOUNTS.join(', ')}`
+          )
+        );
+        process.exit(1);
+      }
+      config.account = opts.account;
+      saveConfig({ ...config });
+    }
+    if (!config.account) {
+      console.error(
+        chalk.red(
+          `An account is required. Run: team-ai-collector connect --account <${ALLOWED_ACCOUNTS.join('|')}>`
+        )
+      );
+      process.exit(1);
+    }
+
     initDb();
     const intervalSec = opts.interval || config.sync_interval_sec || 3600;
 

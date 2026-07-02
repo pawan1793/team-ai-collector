@@ -17,6 +17,7 @@
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "bootstrap:org": "node packages/server/scripts/bootstrap-org.js",
+    "recalc:costs": "node packages/server/scripts/recalculate-costs.js",
     "join": "./join.sh",
     "sync": "node packages/collector/bin/cli.js connect --once",
     "service": "node packages/collector/bin/cli.js service",

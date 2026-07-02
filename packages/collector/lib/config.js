@@ -5,10 +5,18 @@ const os = require('os');
 const CONFIG_DIR = path.join(os.homedir(), '.team-ai');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 
+// Feature 3: allowed internal account names for `connect --account`.
+const ALLOWED_ACCOUNTS = ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5'];
+
+function isValidAccount(account) {
+  return ALLOWED_ACCOUNTS.includes(account);
+}
+
 const DEFAULTS = {
   sync_interval_sec: 3600,
   privacy: { message_content: 'full' },
   projects: null,
+  account: null,
 };
 
 function loadConfig() {
@@ -46,6 +54,8 @@ module.exports = {
   CONFIG_DIR,
   CONFIG_PATH,
   DEFAULTS,
+  ALLOWED_ACCOUNTS,
+  isValidAccount,
   loadConfig,
   saveConfig,
   clearConfig,

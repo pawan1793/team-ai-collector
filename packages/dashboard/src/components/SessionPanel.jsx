@@ -1,3 +1,5 @@
+import { fmtUSD } from '../format';
+
 const ROLE_COLORS = {
   user: '#3d7eff',
   assistant: '#36c98f',
@@ -95,6 +97,10 @@ export default function SessionPanel({ data, loading, onClose }) {
               <Stat
                 label="Tokens out"
                 value={Number(session.total_output_tokens || 0).toLocaleString()}
+              />
+              <Stat
+                label="Est. cost"
+                value={fmtUSD(session.estimated_cost)}
               />
               <Stat
                 label="Last updated"
