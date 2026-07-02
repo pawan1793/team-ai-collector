@@ -11,11 +11,11 @@ test('account defaults to null for backward compatibility', () => {
 });
 
 test('allowed accounts match the documented set', () => {
-  assert.deepStrictEqual(ALLOWED_ACCOUNTS, ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5']);
+  assert.deepStrictEqual(ALLOWED_ACCOUNTS, ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5', 'personal']);
 });
 
 test('isValidAccount accepts allowed values and rejects others', () => {
-  for (const a of ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5']) {
+  for (const a of ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5', 'personal']) {
     assert.ok(isValidAccount(a), `${a} should be valid`);
   }
   assert.ok(!isValidAccount('vibe1'));

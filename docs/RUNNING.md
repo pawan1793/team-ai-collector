@@ -315,7 +315,7 @@ This populates `~/.team-ai/cache.db` only.
 ### 4. Sync to server
 
 Every connect must be tied to an **internal account**. Allowed values: `vibe2`, `vibe3`,
-`info`, `vibe4`, `vibe5`. Pass `--account` the first time; it is saved to
+`info`, `vibe4`, `vibe5`, `personal`. Pass `--account` the first time; it is saved to
 `~/.team-ai/config.json` and reused on subsequent runs (no need to repeat the flag).
 
 ```bash
@@ -598,3 +598,17 @@ Stored in `~/.team-ai/config.json` after login — not env vars:
 6. [ ] Optional: add cron for `connect --once` on engineer laptops  
 
 For product behavior and roadmap, see [PRD-team-ai-usage-collector.md](./PRD-team-ai-usage-collector.md). For Phase 2 (30s sync, more editors), see [PHASE2-DEFERRED.md](./PHASE2-DEFERRED.md).
+
+
+#personal notes
+node packages/collector/bin/cli.js login \
+  --org https://team-ai.thalia-apps.com \
+  --key org_XXXXXXXXXXXXXX \
+  --email pawan@thaliatechnologies.com
+
+node packages/collector/bin/cli.js connect --account info --once
+
+
+cd /opt/team-ai-collector && git pull && npm install && VITE_API_BASE="" npm run build -w @team-ai/dashboard && sudo systemctl restart team-ai-server && sudo systemctl reload apache2 && sleep 2 && curl -s http://127.0.0.1:8080/v1/health
+
+node packages/collector/bin/cli.js connect --account personal --once

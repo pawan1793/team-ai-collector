@@ -14,7 +14,7 @@ paths:
       summary: Ingest sync payload
       description: >
         Accepts an optional top-level `account` string (one of vibe2, vibe3, info, vibe4,
-        vibe5) which is stored on the user. Per-session cost (`estimated_cost`) is derived
+        vibe5, personal) which is stored on the user. Per-session cost (`estimated_cost`) is derived
         server-side from token totals and the session's dominant model.
   /v1/team/overview:
     get:

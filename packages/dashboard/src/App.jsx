@@ -4,6 +4,7 @@ import KpiCard from './components/KpiCard';
 import SessionPanel from './components/SessionPanel';
 import ModelPie from './components/ModelPie';
 import ModelBars from './components/ModelBars';
+import ModelUsageTable from './components/ModelUsageTable';
 import { fmtUSD } from './format';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -21,10 +22,11 @@ const RANGE_OPTIONS = [
   { label: 'Last 90 days', days: 90 },
 ];
 // Feature 3: internal account names, mirrors the collector's allow-list.
-const ACCOUNTS = ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5'];
+const ACCOUNTS = ['vibe2', 'vibe3', 'info', 'vibe4', 'vibe5', 'personal'];
 
 export default function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('org_api_key') || '');
+  const [view, setView] = useState('overview');
   const [rangeDays, setRangeDays] = useState(7);
   const [account, setAccount] = useState('');
   const [overview, setOverview] = useState(null);
@@ -178,6 +180,34 @@ export default function App() {
         </p>
       </header>
 
+      <nav style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {[
+          { id: 'overview', label: 'Overview' },
+          { id: 'modelUsage', label: 'Model usage' },
+        ].map((tab) => {
+          const active = view === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setView(tab.id)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: active ? 'none' : '1px solid #2a3544',
+                background: active ? '#3d7eff' : 'transparent',
+                color: active ? '#fff' : '#8b9cb3',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
+
       <section
         style={{
           display: 'flex',
@@ -277,6 +307,10 @@ export default function App() {
         <p style={{ color: '#ff6b6b', marginBottom: 16 }}>{error}</p>
       )}
 
+      {view === 'modelUsage' && <ModelUsageTable members={members} />}
+
+      {view === 'overview' && (
+       <>
       {overview && (
         <div
           style={{
@@ -551,6 +585,8 @@ export default function App() {
 
       {selectedSessionId && (
         <SessionPanel data={sessionDetail} loading={detailLoading} onClose={closeSession} />
+      )}
+       </>
       )}
     </div>
   );

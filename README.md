@@ -28,7 +28,7 @@ node packages/collector/bin/cli.js login \
   --key org_xxxxxxxx
 
 # Hourly sync (or --once for cron). --account is required the first time, then remembered.
-# Allowed accounts: vibe2, vibe3, info, vibe4, vibe5
+# Allowed accounts: vibe2, vibe3, info, vibe4, vibe5, personal
 node packages/collector/bin/cli.js connect --account vibe2 --once
 node packages/collector/bin/cli.js status
 ```
